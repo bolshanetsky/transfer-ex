@@ -102,6 +102,5 @@ ENV/
 .idea
 
 # checkpoint
-checkpoint
 Fast_Style_Transfer_Models/
 examples/
