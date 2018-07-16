@@ -27,8 +27,11 @@ def optimize(content_targets, style_target, content_weight, style_weight,
     style_shape = (1,) + style_target.shape
     print(style_shape)
 
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.333
+
     # precompute style features
-    with tf.Graph().as_default(), tf.device('/cpu:0'), tf.Session() as sess:
+    with tf.Graph().as_default(), tf.device('/cpu:0'), tf.Session(config=config) as sess:
         style_image = tf.placeholder(tf.float32, shape=style_shape, name='style_image')
         style_image_pre = vgg.preprocess(style_image)
         net = vgg.net(vgg_path, style_image_pre)
@@ -38,9 +41,6 @@ def optimize(content_targets, style_target, content_weight, style_weight,
             features = np.reshape(features, (-1, features.shape[3]))
             gram = np.matmul(features.T, features) / features.size
             style_features[layer] = gram
-
-    config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.333
 
     with tf.Graph().as_default(), tf.Session(config=config) as sess:
         X_content = tf.placeholder(tf.float32, shape=batch_shape, name="X_content")
