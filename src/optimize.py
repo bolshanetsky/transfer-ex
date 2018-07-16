@@ -40,7 +40,7 @@ def optimize(content_targets, style_target, content_weight, style_weight,
             style_features[layer] = gram
 
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
+    config.gpu_options.per_process_gpu_memory_fraction = 0.333
 
     with tf.Graph().as_default(), tf.Session(config=config) as sess:
         X_content = tf.placeholder(tf.float32, shape=batch_shape, name="X_content")
