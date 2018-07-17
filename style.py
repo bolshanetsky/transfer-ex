@@ -156,7 +156,8 @@ def main():
             if not options.slow:
                 ckpt_dir = os.path.dirname(options.checkpoint_dir)
                 evaluate.ffwd_to_img(options.test,preds_path,
-                                     options.checkpoint_dir)
+                                     options.checkpoint_dir,
+                                     device='/gpu:0')
             else:
                 save_img(preds_path, img)
     ckpt_dir = options.checkpoint_dir
