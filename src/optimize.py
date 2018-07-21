@@ -51,6 +51,9 @@ def optimize(content_targets, style_target, content_weight, style_weight,
         content_net = vgg.net(vgg_path, X_pre)
         content_features[CONTENT_LAYER] = content_net[CONTENT_LAYER]
 
+        # tensorboar output
+        train_writer = tf.summary.FileWriter('./logs/1/ ', sess.graph)
+
         if slow:
             preds = tf.Variable(
                 tf.random_normal(X_content.get_shape()) * 0.256
@@ -90,8 +93,17 @@ def optimize(content_targets, style_target, content_weight, style_weight,
 
         loss = content_loss + style_loss + tv_loss
 
+        # tensorboard variables
+        global batch_time
+        batch_time = 0.0
+        tf.summary.scalar("style_loss", style_loss)
+        tf.summary.scalar("content_loss", content_loss)
+        tf.summary.scalar("tv_loss", tv_loss)
+        tf.summary.scalar("loss", loss)
+        tf.summary.scalar("batch_time", batch_time)
+
         # overall loss
-        train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
         sess.run(tf.global_variables_initializer())
         import random
         uid = random.randint(1, 100)
@@ -105,20 +117,26 @@ def optimize(content_targets, style_target, content_weight, style_weight,
                 step = curr + batch_size
                 X_batch = np.zeros(batch_shape, dtype=np.float32)
                 for j, img_p in enumerate(content_targets[curr:step]):
-                   X_batch[j] = get_img(img_p, (256,256,3)).astype(np.float32)
+                    X_batch[j] = get_img(img_p, (256,256,3)).astype(np.float32)
 
                 iterations += 1
                 assert X_batch.shape[0] == batch_size
 
                 feed_dict = {
-                   X_content:X_batch
+                    X_content:X_batch
                 }
+                
+                sess.run(optimizer, feed_dict=feed_dict)
 
-                train_step.run(feed_dict=feed_dict)
                 end_time = time.time()
-                delta_time = end_time - start_time
-                if debug:
-                    print("UID: %s, batch time: %s" % (uid, delta_time))
+                # global batch_time
+                batch_time = end_time - start_time
+                merge = tf.summary.merge_all()
+                summary = sess.run(merge, feed_dict=feed_dict)
+                train_writer.add_summary(summary=summary, global_step=iterations)
+
+                # if debug:
+                print("UID: %s, batch time: %s" % (uid, batch_time))
                 is_print_iter = int(iterations) % print_iterations == 0
                 if slow:
                     is_print_iter = epoch % print_iterations == 0
@@ -127,17 +145,17 @@ def optimize(content_targets, style_target, content_weight, style_weight,
                 if should_print:
                     to_get = [style_loss, content_loss, tv_loss, loss, preds]
                     test_feed_dict = {
-                       X_content:X_batch
+                        X_content:X_batch
                     }
 
-                    tup = sess.run(to_get, feed_dict = test_feed_dict)
-                    _style_loss,_content_loss,_tv_loss,_loss,_preds = tup
+                    tup = sess.run(to_get, feed_dict=test_feed_dict)
+                    _style_loss, _content_loss, _tv_loss, _loss, _preds = tup
                     losses = (_style_loss, _content_loss, _tv_loss, _loss)
                     if slow:
-                       _preds = vgg.unprocess(_preds)
+                        _preds = vgg.unprocess(_preds)
                     else:
-                       saver = tf.train.Saver()
-                       res = saver.save(sess, save_path)
+                        saver = tf.train.Saver()
+                        saver.save(sess, save_path)
                     yield(_preds, losses, iterations, epoch)
 
 def _tensor_size(tensor):

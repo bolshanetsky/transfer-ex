@@ -1,8 +1,5 @@
 from __future__ import print_function
 
-import sys
-
-import os
 import tensorflow as tf
 
 path_to_checkpoint = './checkpoint/bokals_1/fns.ckpt'
