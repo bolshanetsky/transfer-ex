@@ -52,7 +52,7 @@ def optimize(content_targets, style_target, content_weight, style_weight,
         content_features[CONTENT_LAYER] = content_net[CONTENT_LAYER]
 
         # tensorboar output
-        train_writer = tf.summary.FileWriter('./logs/1/ ', sess.graph)
+        train_writer = tf.summary.FileWriter('./logs/1/train', sess.graph)
 
         if slow:
             preds = tf.Variable(
@@ -94,8 +94,7 @@ def optimize(content_targets, style_target, content_weight, style_weight,
         loss = content_loss + style_loss + tv_loss
 
         # tensorboard variables
-        global batch_time
-        batch_time = 0.0
+        batch_time = tf.Variable(0)
         tf.summary.scalar("style_loss", style_loss)
         tf.summary.scalar("content_loss", content_loss)
         tf.summary.scalar("tv_loss", tv_loss)
@@ -123,20 +122,16 @@ def optimize(content_targets, style_target, content_weight, style_weight,
                 assert X_batch.shape[0] == batch_size
 
                 feed_dict = {
-                    X_content:X_batch
+                    X_content: X_batch
                 }
                 
                 sess.run(optimizer, feed_dict=feed_dict)
-
                 end_time = time.time()
-                # global batch_time
-                batch_time = end_time - start_time
+                batch_time.load(end_time - start_time, sess)
                 merge = tf.summary.merge_all()
                 summary = sess.run(merge, feed_dict=feed_dict)
                 train_writer.add_summary(summary=summary, global_step=iterations)
 
-                # if debug:
-                print("UID: %s, batch time: %s" % (uid, batch_time))
                 is_print_iter = int(iterations) % print_iterations == 0
                 if slow:
                     is_print_iter = epoch % print_iterations == 0
@@ -145,7 +140,7 @@ def optimize(content_targets, style_target, content_weight, style_weight,
                 if should_print:
                     to_get = [style_loss, content_loss, tv_loss, loss, preds]
                     test_feed_dict = {
-                        X_content:X_batch
+                        X_content: X_batch
                     }
 
                     tup = sess.run(to_get, feed_dict=test_feed_dict)

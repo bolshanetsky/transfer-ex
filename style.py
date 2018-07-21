@@ -152,10 +152,10 @@ def main():
         print('style: %s, content:%s, tv: %s' % to_print)
         if options.test:
             assert options.test_dir != False
-            preds_path = '%s/%s_%s.png' % (options.test_dir,epoch,i)
+            preds_path = '%s/%s_%s.png' % (options.test_dir, epoch, i)
             if not options.slow:
                 ckpt_dir = os.path.dirname(options.checkpoint_dir)
-                evaluate.ffwd_to_img(options.test,preds_path,
+                evaluate.ffwd_to_img(options.test, preds_path,
                                      options.checkpoint_dir,
                                      device='/gpu:0')
             else:
@@ -163,6 +163,7 @@ def main():
     ckpt_dir = options.checkpoint_dir
     cmd_text = 'python evaluate.py --checkpoint %s ...' % ckpt_dir
     print("Training complete. For evaluation:\n    `%s`" % cmd_text)
+
 
 if __name__ == '__main__':
     main()
