@@ -94,12 +94,12 @@ def optimize(content_targets, style_target, content_weight, style_weight,
         loss = content_loss + style_loss + tv_loss
 
         # tensorboard variables
-        batch_time = tf.Variable(0)
-        tf.summary.scalar("style_loss", style_loss)
-        tf.summary.scalar("content_loss", content_loss)
-        tf.summary.scalar("tv_loss", tv_loss)
-        tf.summary.scalar("loss", loss)
-        tf.summary.scalar("batch_time", batch_time)
+        # batch_time = tf.Variable(0)
+        # tf.summary.scalar("style_loss", style_loss)
+        # tf.summary.scalar("content_loss", content_loss)
+        # tf.summary.scalar("tv_loss", tv_loss)
+        # tf.summary.scalar("loss", loss)
+        # tf.summary.scalar("batch_time", batch_time)
 
         # overall loss
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
@@ -127,10 +127,14 @@ def optimize(content_targets, style_target, content_weight, style_weight,
                 
                 sess.run(optimizer, feed_dict=feed_dict)
                 end_time = time.time()
-                batch_time.load(end_time - start_time, sess)
-                merge = tf.summary.merge_all()
-                summary = sess.run(merge, feed_dict=feed_dict)
-                train_writer.add_summary(summary=summary, global_step=iterations)
+                batch_time = end_time - start_time
+                # batch_time.load(end_time - start_time, sess)
+                # merge = tf.summary.merge_all()
+                # summary = sess.run(merge, feed_dict=feed_dict)
+                # train_writer.add_summary(summary=summary, global_step=iterations)
+
+                if iterations % 200 == 0:
+                    print("batch time: " + str(batch_time) + " iteration: " + str(iterations))
 
                 is_print_iter = int(iterations) % print_iterations == 0
                 if slow:
